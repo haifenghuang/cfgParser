@@ -62,6 +62,7 @@ static int endSection(int state, int symbol)
 
 static int newOption(int state, int symbol)
 {
+  sprintf(optionKey+strlen(optionKey), "%c", symbol);
   return 0;
 }
 
