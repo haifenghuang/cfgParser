@@ -3,13 +3,13 @@
 #include <stdlib.h>
 
 typedef struct tagSections{
-    char name[64];
+    char name[256];
     struct tagOptions *options;
     struct tagSections *next;
 }Sections;
 
 typedef struct tagOptions{
-    char name[64];
+    char name[256];
     char value[1024];
     struct tagOptions *next;
 }Options;
@@ -17,6 +17,7 @@ typedef struct tagOptions{
 static Sections gSections, *gLastSection;
 static Options *gLastOption;
 static char buf[1024];
+static char optionKey[256];
 static int meetSection;
 static int line;
 
@@ -61,42 +62,41 @@ static int endSection(int state, int symbol)
 
 static int newOption(int state, int symbol)
 {
-  Options *cur;
-  Options *option = calloc(1, sizeof(Options));
-  if (option == NULL)
-    {
-      printf("Option allocation error\n");
-      return 1;
-    }
-
-  if (meetSection) /* already has meet section(s) */
-    {
-      if (gLastSection->options == NULL)
-        gLastSection->options = option;
-      else
-        gLastOption->next = option;
-    }
-  else
-    {
-      gSections.name[0]='\0';
-      if (gSections.options == NULL) /* no option yet */
-          gSections.options = option;
-      else /* already have option(s) */
-        {
-          cur = gSections.options;
-          while (cur->next != NULL) cur = cur->next;
-          cur->next = option;
-        }
-    }
-
-  gLastOption = option;
-  sprintf(gLastOption->name+strlen(gLastOption->name), "%c", symbol);
-
   return 0;
 }
 
 static int newValue(int state, int symbol)
 {
+  Options *cur;  
+  Options *option = calloc(1, sizeof(Options));
+  if (option == NULL)
+  {
+    printf("Option allocation error\n");
+    return 1;
+  }
+  if (meetSection) /* already has meet section(s) */
+  {
+    if (gLastSection->options == NULL)
+      gLastSection->options = option;
+    else
+      gLastOption->next = option;
+  }
+  else
+  {
+    gSections.name[0]='\0';
+    if (gSections.options == NULL) /* no option yet */
+      gSections.options = option;
+    else /* already have option(s) */
+    {
+      cur = gSections.options;
+      while (cur->next != NULL) cur = cur->next;
+      cur->next = option;
+    }
+  }
+  gLastOption = option;
+  strcpy(gLastOption->name, optionKey);
+  memset(optionKey, 0x00, sizeof(optionKey));
+
   if (symbol != '=')
     sprintf(gLastOption->value+strlen(gLastOption->value), "%c", symbol);
 
